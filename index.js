@@ -38,17 +38,66 @@ const options = {
     gzip: true,
 };
 
-const req = https.get(options, (res) => {
-    res.setEncoding("utf8");
-    let body = "";
-    res.on("data", data => {
-        body += data;
+let coins = "";
+
+const quoteRequest = () => {
+    https.get(options, (res) => {
+        res.setEncoding("utf8");
+        res.on("data", data => {
+            coins += data;
+        });
+        res.on("end", () => {
+            coins = JSON.parse(coins);
+            console.log("quoteRequest func", coins.data.BTC);
+        });
+    });    
+}
+
+const quoteToDB = () => {
+    console.log("start quoteToDB func", coins.data);
+    let BTCrate = coins.data.BTC.quote.USD.price;
+    let ETHrate = coins.data.ETH.quote.USD.price;
+    let LTCrate = coins.data.LTC.quote.USD.price;
+    const sqlInsert = 'INSERT INTO rates (BTC,ETH,LTC) values ('+BTCrate+','+ETHrate+','+LTCrate+');';
+    pool.getConnection((err, connection) => {
+        if (err) console.log(err);
+        connection.query(sqlInsert, (err, result) => {
+            connection.release(); 
+            if(err) console.log(err);
+            console.log('The data sent to the db is: \n', result);
+            coins = "";
+        });
     });
-    res.on("end", () => {
-        body = JSON.parse(body);
-        console.log(body.data.BTC.quote);
+}
+
+const rateUpdate = () => {
+    quoteRequest();
+    setTimeout(function(){quoteToDB()}, 5000);
+};
+
+function rateUpdateInterval() {
+    rateUpdate();
+    console.log("updates db rates");
+}  
+setInterval(rateUpdateInterval,300000);  //300,000 ms = 300 seconds = 5 minutes
+
+const getCurrentRates = () => {
+    const sqlCurrent = 'SELECT * FROM rates WHERE date >= ALL (SELECT MAX(date) FROM rates);';
+    pool.getConnection((err, connection) => {
+        if (err) console.log(err);
+        connection.query(sqlCurrent, (err, result) => {
+            connection.release(); 
+            if(err) console.log(err);
+            console.log('The current rates are: \n', result);
+        });
     });
-});
+}
+
+const reqHistoryParams = {coin: 'BTC', start: 'current', end: ''}
+
+const getHistoricRates = ({reqParams}) => {
+
+}
 
 
 app.listen(PORT, () => {
