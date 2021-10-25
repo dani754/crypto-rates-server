@@ -1,5 +1,8 @@
 const express = require('express');
+const cors = require('cors');
 const app = express();
+app.use(cors());
+
 const PORT = process.env.PORT || 3001;
 const getRates = require('./functions/getRates.js');
 const ratesUpdates = require('./functions/ratesUpdate.js');
