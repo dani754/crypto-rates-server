@@ -4,7 +4,7 @@ const coinMarketCapAPI = {
     port: 443,
     path: '/',
     headers: {
-        'X-CMC_PRO_API_KEY': '1089cde2-9abb-4f0e-9a03-e5c4dc5e85dd', //API KEY
+        'X-CMC_PRO_API_KEY': 'UPDATE', //API KEY
         'Content-Type': 'application/json'
     },
     json: true,
